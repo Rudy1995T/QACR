@@ -1,0 +1,39 @@
+# Example test case: Login flow on a demo site
+# Uses https://the-internet.herokuapp.com for demonstration
+
+id: example-login
+name: "Login and verify dashboard access"
+baseUrl: "https://the-internet.herokuapp.com"
+variables:
+  USERNAME: "tomsmith"
+  PASSWORD: "SuperSecretPassword!"
+
+steps:
+  - goal: "Navigate to the login page by clicking the Form Authentication link."
+    expect:
+      - type: url_contains
+        value: "/login"
+      - type: visible_text
+        value: "Login Page"
+
+  - goal: "Enter the username ${ENV.USERNAME} into the username field."
+    expect:
+      - type: visible_text
+        value: "Username"
+
+  - goal: "Enter the password ${ENV.PASSWORD} into the password field."
+    expect:
+      - type: visible_text
+        value: "Password"
+
+  - goal: "Click the Login button to submit the form."
+    expect:
+      - type: url_contains
+        value: "/secure"
+      - type: visible_text
+        value: "Secure Area"
+
+  - goal: "Verify we are logged in by checking for the logout button."
+    expect:
+      - type: visible_text
+        value: "Logout"

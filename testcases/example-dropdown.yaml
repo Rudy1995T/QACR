@@ -1,0 +1,24 @@
+# Example test case: Dropdown selection
+# Uses https://the-internet.herokuapp.com for demonstration
+
+id: example-dropdown
+name: "Select dropdown options"
+baseUrl: "https://the-internet.herokuapp.com"
+
+steps:
+  - goal: "Navigate to the Dropdown page by clicking the Dropdown link."
+    expect:
+      - type: url_contains
+        value: "/dropdown"
+      - type: visible_text
+        value: "Dropdown List"
+
+  - goal: "Select 'Option 1' from the dropdown menu."
+    expect:
+      - type: visible_text
+        value: "Option 1"
+
+  - goal: "Change the selection to 'Option 2' in the dropdown."
+    expect:
+      - type: visible_text
+        value: "Option 2"
