@@ -3,7 +3,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { AgentRunner, TestCase, StepResult, maskSecrets } from '../src/agent/index.js';
-import { createProvider, OllamaProvider } from '../src/llm/index.js';
+import { createProvider, ChutesProvider } from '../src/llm/index.js';
 import { loadTestCases, resolveVariables, createLogger } from '../src/utils/index.js';
 
 // Load environment variables
@@ -24,21 +24,22 @@ const config = {
   expectationTimeoutMs: 3000,
 };
 
-// Check Ollama availability before running tests
+// Check Chutes availability before running tests
 test.beforeAll(async () => {
-  const ollama = new OllamaProvider();
-  const available = await ollama.healthCheck();
+  const chutes = new ChutesProvider();
+  const available = await chutes.healthCheck();
   
   if (!available) {
-    console.warn('\n⚠️  Ollama is not available at http://localhost:11434');
-    console.warn('   Start Ollama and pull a model:');
-    console.warn('   $ ollama serve');
-    console.warn('   $ ollama pull llama3.2:3b\n');
+    console.warn('\n⚠️  Chutes API is not reachable');
+    console.warn('   Make sure CHUTES_API_KEY is set in your .env file');
+    console.warn('   Get your API key from https://chutes.ai/app/api\n');
+  } else {
+    console.log('\n✓ Chutes API is available\n');
   }
   
-  const models = await ollama.listModels();
+  const models = await chutes.listModels();
   if (models.length > 0) {
-    console.log(`\n✓ Available models: ${models.join(', ')}\n`);
+    console.log(`✓ Available models: ${models.slice(0, 5).join(', ')}${models.length > 5 ? '...' : ''}\n`);
   }
 });
 

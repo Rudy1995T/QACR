@@ -1,8 +1,8 @@
 export type { LLMProvider, LLMConfig } from './provider.js';
 export { StubProvider } from './provider.js';
-export { OllamaProvider } from './ollama.js';
+export { ChutesProvider } from './chutes.js';
 
-import { OllamaProvider } from './ollama.js';
+import { ChutesProvider } from './chutes.js';
 import { StubProvider } from './provider.js';
 import type { LLMProvider, LLMConfig } from './provider.js';
 
@@ -10,21 +10,17 @@ import type { LLMProvider, LLMConfig } from './provider.js';
  * Create an LLM provider based on environment configuration
  */
 export function createProvider(config?: Partial<LLMConfig>): LLMProvider {
-  const providerType = process.env.LLM_PROVIDER || 'ollama';
+  const providerType = process.env.LLM_PROVIDER || 'chutes';
   
   switch (providerType.toLowerCase()) {
-    case 'ollama':
-      return new OllamaProvider(config);
+    case 'chutes':
+      return new ChutesProvider(config);
     
     case 'stub':
       return new StubProvider();
     
-    // Future: add OpenAI-compatible provider here
-    // case 'openai':
-    //   return new OpenAIProvider(config);
-    
     default:
-      console.warn(`Unknown LLM provider "${providerType}", falling back to Ollama`);
-      return new OllamaProvider(config);
+      console.warn(`Unknown LLM provider "${providerType}", falling back to Chutes`);
+      return new ChutesProvider(config);
   }
 }

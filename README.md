@@ -1,6 +1,6 @@
 # QACR - AI QA Executor
 
-A local-first AI-powered test automation framework that uses Playwright ARIA snapshots and a local LLM to execute human-readable test cases.
+A local-first AI-powered test automation framework that uses Playwright ARIA snapshots and Chutes for LLM inference to execute human-readable test cases.
 
 **No screenshots. No vision models.** Just text-based page observations and smart AI decision-making.
 
@@ -8,7 +8,7 @@ A local-first AI-powered test automation framework that uses Playwright ARIA sna
 
 - 🤖 **AI-Driven**: LLM decides actions based on ARIA accessibility snapshots
 - 📝 **Human-Readable**: Write test cases in natural language YAML
-- 🏠 **Local-First**: Uses Ollama by default, no paid APIs required
+- 🚀 **Chutes-Powered**: Serverless AI inference on decentralized GPU infrastructure
 - 📊 **Playwright Reports**: Full HTML reports with debug attachments
 - 🔌 **Swappable LLM**: Easy to add OpenAI-compatible providers
 - ✅ **Schema Validated**: All LLM outputs validated with Zod
@@ -22,40 +22,20 @@ npm install
 npx playwright install chromium
 ```
 
-### 2. Install & Run Ollama
+### 2. Get a Chutes API Key
 
-```bash
-# macOS
-brew install ollama
+1. Go to [chutes.ai](https://chutes.ai) and create an account
+2. Navigate to [API Keys](https://chutes.ai/app/api)
+3. Create a new API key
 
-# Linux
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Start the server
-ollama serve
-```
-
-### 3. Pull a Model
-
-```bash
-# Recommended: Small but capable instruction-tuned model
-ollama pull llama3.2:3b
-
-# Alternative: Larger, more capable
-ollama pull llama3.1:8b
-
-# Alternative: Smaller, faster
-ollama pull phi3:mini
-```
-
-### 4. Configure Environment
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
-# Edit .env to customize settings
+# Edit .env and add your CHUTES_API_KEY
 ```
 
-### 5. Run Tests
+### 4. Run Tests
 
 ```bash
 # Run all test cases
@@ -68,7 +48,7 @@ npm run test:debug
 npx playwright test --grep "Login"
 ```
 
-### 6. View Report
+### 5. View Report
 
 ```bash
 npx playwright show-report
@@ -138,17 +118,28 @@ Use `${ENV.VARIABLE_NAME}` in goals. Variables are resolved from:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_PROVIDER` | `ollama` | LLM provider (ollama, stub) |
-| `LLM_MODEL` | `llama3.2:3b` | Model name |
-| `LLM_BASE_URL` | `http://localhost:11434` | Ollama API URL |
+| `LLM_PROVIDER` | `chutes` | LLM provider (chutes, stub) |
+| `LLM_MODEL` | `unsloth/Llama-3.2-3B-Instruct` | Model name |
+| `LLM_BASE_URL` | `https://llm.chutes.ai` | Chutes API URL |
 | `LLM_TEMPERATURE` | `0.1` | Sampling temperature |
 | `LLM_TOP_P` | `0.9` | Top-p sampling |
 | `LLM_TIMEOUT_MS` | `60000` | Request timeout |
+| `CHUTES_API_KEY` | - | Your Chutes API key (required) |
 | `MAX_TICKS_PER_STEP` | `25` | Max actions per step |
 | `ARIA_SNAPSHOT_MAX_CHARS` | `8000` | Truncate ARIA snapshot |
 | `SHORT_TEXT_MAX_CHARS` | `2000` | Truncate visible text |
 | `LOG_LEVEL` | `info` | Logging level |
 | `DEBUG` | `false` | Enable debug logging |
+
+### Available Models
+
+Chutes provides access to various models. Some popular options:
+
+- `unsloth/Llama-3.2-3B-Instruct` - Fast, capable instruction model (default)
+- `unsloth/Llama-3.2-1B-Instruct` - Smaller, faster
+- `meta-llama/Llama-3.1-8B-Instruct` - Larger, more capable
+
+Browse available models at [chutes.ai/app](https://chutes.ai/app)
 
 ## Architecture
 
@@ -163,7 +154,7 @@ Use `${ENV.VARIABLE_NAME}` in goals. Variables are resolved from:
     runner.ts         # Main agent loop
   /llm
     provider.ts       # LLM provider interface
-    ollama.ts         # Ollama implementation
+    chutes.ts         # Chutes implementation
   /utils
     logger.ts         # Pino logging
     testcase.ts       # YAML test case loader
@@ -232,7 +223,7 @@ On failure, tests attach:
 **LLM returns invalid JSON**
 
 - Check model supports JSON output
-- Try a larger model (llama3.1:8b)
+- Try a larger model (e.g., `meta-llama/Llama-3.1-8B-Instruct`)
 - Increase temperature slightly
 
 **Element not found**
@@ -247,23 +238,29 @@ On failure, tests attach:
 - Simplify the step goal
 - Check if expectations are achievable
 
-**Ollama timeout**
+**Chutes API errors**
+
+- Verify `CHUTES_API_KEY` is set correctly
+- Check your API key has sufficient credits
+- Try a different model if one is unavailable
+
+**Request timeout**
 
 - Increase `LLM_TIMEOUT_MS`
-- Check Ollama is running
+- Check your network connection
 - Try a smaller/faster model
 
 ## Extending
 
-### Add OpenAI-Compatible Provider
+### Add Custom Provider
 
 ```typescript
-// src/llm/openai.ts
+// src/llm/custom.ts
 import type { LLMProvider, LLMConfig } from './provider.js';
 
-export class OpenAIProvider implements LLMProvider {
+export class CustomProvider implements LLMProvider {
   async generateAction(prompt: string): Promise<string> {
-    // Implement OpenAI API call
+    // Implement your API call
   }
 }
 ```
@@ -286,7 +283,7 @@ case 'element_count': {
 - **Accessibility dependent** - Works best on well-structured, accessible sites
 - **LLM variability** - Different models may produce different results
 - **No parallel execution** - Tests run sequentially for AI stability
-- **Local LLM required** - Needs Ollama or compatible local server
+- **API key required** - Needs a Chutes account and API key
 
 ## License
 
