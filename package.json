@@ -7,7 +7,12 @@
     "build": "tsc",
     "test": "playwright test",
     "test:debug": "DEBUG=qacr:* playwright test",
-    "lint": "eslint src --ext .ts"
+    "test:ai": "playwright test",
+    "gen:recordings": "tsx src/recorder/generate.ts",
+    "verify:recordings": "npm run gen:recordings && git diff --exit-code -- tests/recordings",
+    "test:recordings": "playwright test -c playwright.recordings.config.ts",
+    "test:recordings:ci": "CI=1 npm run test:generator && CI=1 npm run verify:recordings && CI=1 RECORDINGS_STRICT_SELECTORS=1 npm run test:recordings",
+    "test:generator": "tsx --test src/recorder/__tests__/generate.test.ts"
   },
   "keywords": [
     "playwright",
@@ -22,6 +27,8 @@
   "devDependencies": {
     "@playwright/test": "^1.42.0",
     "@types/node": "^20.11.0",
+    "fast-glob": "^3.3.0",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.0"
   },
   "dependencies": {

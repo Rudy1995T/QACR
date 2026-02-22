@@ -277,6 +277,164 @@ case 'element_count': {
 }
 ```
 
+## Recordings Pipeline
+
+QACR includes a **Chrome DevTools Recorder → Playwright** pipeline that converts browser recordings into CI-stable Playwright test suites. This is a *separate* pipeline from the AI-driven test runner above.
+
+### Why Two Pipelines?
+
+| | AI Tests (`npm test`) | Recordings (`npm run test:recordings`) |
+|---|---|---|
+| **Source** | YAML test cases with natural-language goals | Chrome DevTools Recorder JSON |
+| **Execution** | LLM decides actions at runtime | Pre-generated Playwright code |
+| **Speed** | Slower (LLM inference per step) | Fast (pure Playwright) |
+| **Workers** | 1 (sequential) | Parallel (default) |
+| **Use case** | Exploratory, complex flows | Regression, smoke tests |
+
+### Quick Start: Recordings
+
+#### 1. Record a User Flow
+
+1. Open Chrome DevTools → **Recorder** tab
+2. Click **Start new recording**, give it a name
+3. Perform your flow (clicks, typing, navigation)
+4. Click **Stop**, then **Export** as JSON
+5. Save the JSON file to `recordings/your-flow.json`
+
+#### 2. Generate Playwright Tests
+
+```bash
+npm run gen:recordings
+```
+
+This reads all JSON files under `recordings/` and generates Playwright test specs in `tests/recordings/`.
+
+#### 3. Run the Tests
+
+```bash
+npm run test:recordings
+```
+
+#### 4. View Report
+
+```bash
+npx playwright show-report playwright-report-recordings
+```
+
+### CI Integration
+
+The CI pipeline verifies that generated tests are up-to-date and runs them with strict selectors:
+
+```bash
+npm run test:recordings:ci
+```
+
+This runs:
+1. `npm run verify:recordings` — regenerates tests and checks `git diff` to ensure they match
+2. `npm run test:recordings` — runs the test suite with `RECORDINGS_STRICT_SELECTORS=1`
+
+A GitHub Actions workflow is provided at `.github/workflows/recordings.yml`. A `Jenkinsfile.recordings` example is also included.
+
+### Selector Stability
+
+The generator scores each selector from the DevTools recording and picks the most stable option:
+
+| Priority | Selector Type | Example |
+|----------|--------------|---------|
+| 1 (best) | ARIA role+name | `aria/Submit[role="button"]` → `page.getByRole('button', { name: 'Submit' })` |
+| 2 | Text content | `text/Sign in` → `page.getByText('Sign in', { exact: true })` |
+| 3 | data-testid | `[data-testid="login"]` → `page.getByTestId('login')` |
+| 4 | Stable #id | `#email` → `page.locator('#email')` |
+| 5 (worst) | Raw CSS | `div > span.class` → `page.locator('div > span.class')` |
+
+Selectors with `nth-child`, long chains, many class names, or generated-looking tokens are flagged as **brittle**.
+
+### Strict Selector Gating
+
+Set `RECORDINGS_STRICT_SELECTORS=1` to make the generator **fail** if any brittle selectors are used:
+
+```bash
+RECORDINGS_STRICT_SELECTORS=1 npm run gen:recordings
+```
+
+In CI, this is enabled by default. To fix brittle selectors, add overrides (see below).
+
+### Selector Overrides
+
+Create a YAML file in `recordings/overrides/<recording-name>.yaml` to override selectors for specific steps:
+
+```yaml
+overrides:
+  - step: 4        # 0-based step index
+    action: click   # step type
+    locator:
+      kind: role
+      role: button
+      name: "Sign in"
+      exact: true
+```
+
+Supported `kind` values: `role`, `label`, `text`, `testid`, `css`.
+
+### Assertions
+
+Inject assertions after specific steps by creating `recordings/assertions/<recording-name>.yaml`:
+
+```yaml
+assertions:
+  - afterStep: 3    # 0-based step index
+    expect:
+      - type: url_contains
+        value: "/dashboard"
+      - type: visible_text
+        value: "Welcome back"
+```
+
+Supported assertion types:
+
+| Type | Description |
+|------|-------------|
+| `url_contains` | URL matches pattern |
+| `visible_text` | Text is visible on page |
+| `role_visible` | Element with role+name is visible (requires `role` and `name` fields) |
+
+### NPM Scripts Reference
+
+| Script | Description |
+|--------|-------------|
+| `npm run gen:recordings` | Generate Playwright tests from recordings |
+| `npm run verify:recordings` | Generate + verify no git diff (CI check) |
+| `npm run test:recordings` | Run recordings test suite |
+| `npm run test:recordings:ci` | Full CI pipeline (verify + strict + test) |
+| `npm run test:ai` | Run AI-driven test suite (alias for `npm test`) |
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RECORDINGS_STRICT_SELECTORS` | `0` (`1` in CI) | Fail on brittle selectors |
+| `RECORDINGS_SCREENSHOTS` | `off` | Screenshot mode: `off`, `on`, `only-on-failure` |
+| `RECORDINGS_VIDEO` | `off` | Video mode: `off`, `on`, `retain-on-failure` |
+
+### Architecture
+
+```
+recordings/                     # Input: DevTools Recorder JSON files
+  assertions/                   # Optional: assertion sidecars (YAML)
+  overrides/                    # Optional: selector override sidecars (YAML)
+src/recorder/
+  generate.ts                   # Main generator script
+  schemas.ts                    # Zod schemas for recordings, overrides, assertions
+  selectors.ts                  # Selector scoring and Playwright locator generation
+  index.ts                      # Module exports
+  __fixtures__/                 # Test fixtures
+  __tests__/                    # Generator unit tests
+tests/recordings/               # Output: generated Playwright specs (do not hand-edit)
+playwright.recordings.config.ts # Playwright config for recordings suite
+```
+
+---
+
 ## Known Limitations
 
 - **No screenshots/vision** - Relies entirely on text-based observations

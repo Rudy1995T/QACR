@@ -1,0 +1,50 @@
+// Jenkinsfile.recordings — Recordings suite pipeline example
+//
+// Usage: Create a Jenkins Pipeline job pointing at this file,
+//        or add a stage to your existing Jenkinsfile.
+
+pipeline {
+    agent {
+        docker {
+            image 'mcr.microsoft.com/playwright:v1.42.0-jammy'
+            args '--ipc=host'
+        }
+    }
+
+    environment {
+        CI = '1'
+        RECORDINGS_STRICT_SELECTORS = '1'
+        HOME = "${WORKSPACE}"
+    }
+
+    stages {
+        stage('Install') {
+            steps {
+                sh 'npm ci'
+                sh 'npx playwright install --with-deps chromium'
+            }
+        }
+
+        stage('Verify generated code') {
+            steps {
+                sh 'npm run verify:recordings'
+            }
+        }
+
+        stage('Run recordings tests') {
+            steps {
+                sh 'npm run test:recordings'
+            }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'playwright-report-recordings/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'test-results/**', allowEmptyArchive: true
+        }
+        failure {
+            echo 'Recordings suite failed. Check Playwright report for details.'
+        }
+    }
+}

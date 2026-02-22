@@ -1,0 +1,89 @@
+{
+  "title": "Example Login Flow",
+  "steps": [
+    {
+      "type": "setViewport",
+      "width": 1280,
+      "height": 720,
+      "deviceScaleFactor": 1,
+      "isMobile": false,
+      "hasTouch": false,
+      "isLandscape": false
+    },
+    {
+      "type": "navigate",
+      "url": "https://the-internet.herokuapp.com/",
+      "assertedEvents": [
+        {
+          "type": "navigation",
+          "url": "https://the-internet.herokuapp.com/",
+          "title": "The Internet"
+        }
+      ]
+    },
+    {
+      "type": "click",
+      "selectors": [
+        ["aria/Form Authentication"],
+        ["text/Form Authentication"],
+        ["css/ul > li:nth-child(21) > a"]
+      ],
+      "offsetX": 50,
+      "offsetY": 10
+    },
+    {
+      "type": "click",
+      "selectors": [
+        ["aria/Username[role=\"textbox\"]"],
+        ["css/#username"]
+      ],
+      "offsetX": 100,
+      "offsetY": 15
+    },
+    {
+      "type": "change",
+      "selectors": [
+        ["aria/Username[role=\"textbox\"]"],
+        ["css/#username"]
+      ],
+      "value": "tomsmith"
+    },
+    {
+      "type": "click",
+      "selectors": [
+        ["aria/Password[role=\"textbox\"]"],
+        ["css/#password"]
+      ],
+      "offsetX": 100,
+      "offsetY": 15
+    },
+    {
+      "type": "change",
+      "selectors": [
+        ["aria/Password[role=\"textbox\"]"],
+        ["css/#password"]
+      ],
+      "value": "SuperSecretPassword!"
+    },
+    {
+      "type": "click",
+      "selectors": [
+        ["aria/Login[role=\"button\"]"],
+        ["text/Login"],
+        ["css/button.radius"]
+      ],
+      "offsetX": 40,
+      "offsetY": 10
+    },
+    {
+      "type": "click",
+      "selectors": [
+        ["aria/Logout[role=\"link\"]"],
+        ["text/Logout"],
+        ["css/.button.secondary.radius"]
+      ],
+      "offsetX": 30,
+      "offsetY": 10
+    }
+  ]
+}

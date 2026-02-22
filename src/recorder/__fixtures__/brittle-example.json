@@ -1,0 +1,22 @@
+{
+  "title": "Brittle Selectors Test",
+  "steps": [
+    {
+      "type": "navigate",
+      "url": "https://example.com/"
+    },
+    {
+      "type": "click",
+      "selectors": [
+        ["css/div.sc-fKgJPi > div:nth-child(3) > ul > li:nth-child(2) > a.bRjkLq"]
+      ]
+    },
+    {
+      "type": "change",
+      "selectors": [
+        ["css/div.container_a8f2bc12 > form > input:nth-of-type(2)"]
+      ],
+      "value": "hello"
+    }
+  ]
+}

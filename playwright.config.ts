@@ -5,6 +5,7 @@ dotenv.config();
 
 export default defineConfig({
   testDir: './tests',
+  testIgnore: ['**/recordings/**'], // Recordings suite uses its own config
   fullyParallel: false, // Run sequentially for AI agent tests
   forbidOnly: !!process.env.CI,
   retries: 0, // AI agent handles retries internally
