@@ -1,0 +1,65 @@
+name: Recordings Suite
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'recordings/**'
+      - 'src/recorder/**'
+      - 'tests/recordings/**'
+      - 'playwright.recordings.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'recordings/**'
+      - 'src/recorder/**'
+      - 'tests/recordings/**'
+      - 'playwright.recordings.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+jobs:
+  recordings:
+    name: Run Recordings Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run generator unit tests
+        run: npm run test:generator
+
+      - name: Run recordings CI suite
+        run: npm run test:recordings:ci
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recordings-playwright-report
+          path: playwright-report-recordings/
+          retention-days: 14
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recordings-test-results
+          path: test-results/
+          retention-days: 14
