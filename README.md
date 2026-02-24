@@ -315,6 +315,19 @@ This reads all JSON files under `recordings/` and generates Playwright test spec
 npm run test:recordings
 ```
 
+#### 3b. If a Recording Test Fails, Generate Override Sidecar with LLM
+
+```bash
+npm run review:recordings -- --recording QAC_Login --context test-results/qac-login-QAC-Login-chromium/error-context.md
+npm run gen:recordings
+npm run test:recordings
+```
+
+Notes:
+- `review:recordings` writes `recordings/overrides/<recording-name>.yaml` only.
+- If there is only one recording file, `--recording` is optional.
+- If `--context` is omitted, it uses the latest `test-results/**/error-context.md`.
+
 #### 4. View Report
 
 ```bash
@@ -403,6 +416,7 @@ Supported assertion types:
 | Script | Description |
 |--------|-------------|
 | `npm run gen:recordings` | Generate Playwright tests from recordings |
+| `npm run review:recordings` | Use LLM to propose selector overrides from failure context |
 | `npm run verify:recordings` | Generate + verify no git diff (CI check) |
 | `npm run test:recordings` | Run recordings test suite |
 | `npm run test:recordings:ci` | Full CI pipeline (verify + strict + test) |
@@ -424,11 +438,12 @@ recordings/                     # Input: DevTools Recorder JSON files
   overrides/                    # Optional: selector override sidecars (YAML)
 src/recorder/
   generate.ts                   # Main generator script
+  review.ts                     # LLM-assisted override reviewer
   schemas.ts                    # Zod schemas for recordings, overrides, assertions
   selectors.ts                  # Selector scoring and Playwright locator generation
   index.ts                      # Module exports
   __fixtures__/                 # Test fixtures
-  __tests__/                    # Generator unit tests
+  __tests__/                    # Recorder unit tests
 tests/recordings/               # Output: generated Playwright specs (do not hand-edit)
 playwright.recordings.config.ts # Playwright config for recordings suite
 ```

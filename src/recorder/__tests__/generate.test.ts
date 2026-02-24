@@ -90,6 +90,14 @@ describe('selectBestSelector', () => {
     assert.ok(result.code.includes('body'));
     assert.equal(result.brittle, true);
   });
+
+  it('handles flat string[] selector lists from waitForElement exports', () => {
+    const result = selectBestSelector([
+      'span.customHeader_text__qswws',
+      'xpath//html/body/div/div[2]/div[2]/div/div[1]/div[1]/span[2]',
+    ]);
+    assert.ok(result.code.includes('span.customHeader_text__qswws'));
+  });
 });
 
 /* -------------------------------------------------------------------------- */

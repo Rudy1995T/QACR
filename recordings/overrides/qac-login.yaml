@@ -1,0 +1,8 @@
+overrides:
+  - step: 7
+    action: click
+    locator:
+      kind: role
+      role: button
+      name: Login
+      exact: true

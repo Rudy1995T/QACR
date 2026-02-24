@@ -206,15 +206,20 @@ function parseSelector(raw: string): ScoredSelector {
  * Returns the best `ScoredSelector`.
  */
 export function selectBestSelector(
-  selectors: string[][],
+  selectors: string[][] | string[],
 ): ScoredSelector {
   const candidates: ScoredSelector[] = [];
 
   for (const alt of selectors) {
-    // For now we only handle top-level (first frame).
-    // Multi-frame nesting would require frameLocator chaining.
-    if (alt.length === 0) continue;
-    const primary = alt[0]!;
+    if (typeof alt === 'string') {
+      candidates.push(parseSelector(alt));
+      continue;
+    }
+
+    // For frame-nested selector alternatives, we use the top-level frame.
+    if (!Array.isArray(alt) || alt.length === 0) continue;
+    const primary = alt[0];
+    if (typeof primary !== 'string') continue;
     candidates.push(parseSelector(primary));
   }
 

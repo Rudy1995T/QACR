@@ -9,10 +9,11 @@
     "test:debug": "DEBUG=qacr:* playwright test",
     "test:ai": "playwright test",
     "gen:recordings": "tsx src/recorder/generate.ts",
+    "review:recordings": "tsx src/recorder/review.ts",
     "verify:recordings": "npm run gen:recordings && git diff --exit-code -- tests/recordings",
     "test:recordings": "playwright test -c playwright.recordings.config.ts",
     "test:recordings:ci": "CI=1 npm run test:generator && CI=1 npm run verify:recordings && CI=1 RECORDINGS_STRICT_SELECTORS=1 npm run test:recordings",
-    "test:generator": "tsx --test src/recorder/__tests__/generate.test.ts"
+    "test:generator": "tsx --test src/recorder/__tests__/generate.test.ts src/recorder/__tests__/review.test.ts"
   },
   "keywords": [
     "playwright",
