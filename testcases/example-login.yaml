@@ -1,39 +1,40 @@
-# Example test case: Login flow on a demo site
-# Uses https://the-internet.herokuapp.com for demonstration
+# Example test case: Login flow on QACconnector UAT
 
 id: example-login
-name: "Login and verify dashboard access"
-baseUrl: "https://the-internet.herokuapp.com"
-variables:
-  USERNAME: "tomsmith"
-  PASSWORD: "SuperSecretPassword!"
+name: "Login to QACconnector UAT"
+baseUrl: "https://appuat.qaconnector.com/ARP/login"
 
 steps:
-  - goal: "Navigate to the login page by clicking the Form Authentication link."
+  - goal: "Verify the login page is loaded."
     expect:
       - type: url_contains
         value: "/login"
-      - type: visible_text
-        value: "Login Page"
 
-  - goal: "Enter the username ${ENV.USERNAME} into the username field."
+  - goal: "Enter the username ${ENV.TEST_USERNAME} into the User Name field."
     expect:
       - type: visible_text
-        value: "Username"
+        value: "User Name"
 
-  - goal: "Enter the password ${ENV.PASSWORD} into the password field."
+  - goal: "Enter the password ${ENV.TEST_PASSWORD} into the Password field."
     expect:
       - type: visible_text
         value: "Password"
 
-  - goal: "Click the Login button to submit the form."
+  - goal: "Click the Login button to sign in."
     expect:
       - type: url_contains
-        value: "/secure"
-      - type: visible_text
-        value: "Secure Area"
+        value: "/ARP"
 
-  - goal: "Verify we are logged in by checking for the logout button."
+  - goal: "Verify login flow completed and we are not blocked on the sign-in form."
     expect:
+      - type: url_contains
+        value: "/ARP"
       - type: visible_text
-        value: "Logout"
+        value: "Automation Regression"
+
+  - goal: "Click Test Bank to navigate to Test Cases."
+    expect:
+      - type: url_contains
+        value: "/ARP/testBank"
+      - type: visible_text
+        value: "Test Bank"

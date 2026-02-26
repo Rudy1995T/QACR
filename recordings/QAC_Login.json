@@ -1,0 +1,126 @@
+{
+    "title": "QAC_Login",
+    "steps": [
+        {
+            "type": "setViewport",
+            "width": 1365,
+            "height": 945,
+            "deviceScaleFactor": 1,
+            "isMobile": false,
+            "hasTouch": false,
+            "isLandscape": false
+        },
+        {
+            "type": "navigate",
+            "url": "https://appuat.qaconnector.com/ARP/login",
+            "assertedEvents": [
+                {
+                    "type": "navigation",
+                    "url": "https://appuat.qaconnector.com/ARP/login",
+                    "title": "Login to QAConnector"
+                }
+            ]
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\:r1\\:"
+                ],
+                [
+                    "xpath///*[@id=\":r1:\"]"
+                ],
+                [
+                    "pierce/#\\:r1\\:"
+                ]
+            ],
+            "offsetY": 22.4375,
+            "offsetX": 57.71875
+        },
+        {
+            "type": "change",
+            "value": "rtarvids@celticqa.com",
+            "selectors": [
+                [
+                    "#\\:r1\\:"
+                ],
+                [
+                    "xpath///*[@id=\":r1:\"]"
+                ],
+                [
+                    "pierce/#\\:r1\\:"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "keyDown",
+            "target": "main",
+            "key": "Alt"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "#\\:r0\\: > div:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\":r0:\"]/div[2]/div[2]/span/input"
+                ],
+                [
+                    "pierce/#\\:r0\\: > div:nth-of-type(2) input"
+                ]
+            ],
+            "offsetY": 11.21875,
+            "offsetX": 98.71875
+        },
+        {
+            "type": "change",
+            "value": "C3lt!c123",
+            "selectors": [
+                [
+                    "#\\:r0\\: > div:nth-of-type(2) input"
+                ],
+                [
+                    "xpath///*[@id=\":r0:\"]/div[2]/div[2]/span/input"
+                ],
+                [
+                    "pierce/#\\:r0\\: > div:nth-of-type(2) input"
+                ]
+            ],
+            "target": "main"
+        },
+        {
+            "type": "click",
+            "target": "main",
+            "selectors": [
+                [
+                    "aria/Login",
+                    "aria/[role=\"generic\"]"
+                ],
+                [
+                    "div.Login_loginButtonWrapper__HXgOk span"
+                ],
+                [
+                    "xpath///*[@id=\"Login_loginbtn__7Tj03\"]/span"
+                ],
+                [
+                    "pierce/div.Login_loginButtonWrapper__HXgOk span"
+                ]
+            ],
+            "offsetY": 10.21875,
+            "offsetX": 5.171875
+        },
+        {
+            "type": "waitForElement",
+            "target": "main",
+            "selectors": [
+                "span.customHeader_text__qswws",
+                "xpath//html/body/div/div[2]/div[2]/div/div[1]/div[1]/span[2]",
+                "pierce/span.customHeader_text__qswws"
+            ]
+        }
+    ]
+}

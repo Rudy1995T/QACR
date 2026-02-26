@@ -10,6 +10,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join, basename, dirname, relative } from 'path';
+import { fileURLToPath } from 'url';
 import { parse as parseYaml } from 'yaml';
 import fg from 'fast-glob';
 import {
@@ -32,7 +33,7 @@ import {
 /*  Config                                                                     */
 /* -------------------------------------------------------------------------- */
 
-const ROOT = join(dirname(new URL(import.meta.url).pathname), '..', '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const RECORDINGS_DIR = join(ROOT, 'recordings');
 const OUTPUT_DIR = join(ROOT, 'tests', 'recordings');
 const OVERRIDES_DIR = join(RECORDINGS_DIR, 'overrides');
@@ -85,6 +86,11 @@ interface BrittleReport {
   step: number;
   type: string;
   selector: ScoredSelector;
+}
+
+interface InvalidRecordingReport {
+  file: string;
+  reason: string;
 }
 
 function generateNavigateCode(step: Record<string, unknown>): string {
@@ -209,6 +215,29 @@ function getBestScoredSelector(
   return selectBestSelector(selectors);
 }
 
+function isHarExport(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  const log = obj.log;
+  return (
+    !!log &&
+    typeof log === 'object' &&
+    Array.isArray((log as Record<string, unknown>).entries)
+  );
+}
+
+function summarizeParseIssues(
+  issues: Array<{ path: (string | number)[]; message: string }>,
+): string {
+  return issues
+    .slice(0, 2)
+    .map((issue) => {
+      const path = issue.path.length ? issue.path.join('.') : '(root)';
+      return `${path}: ${issue.message}`;
+    })
+    .join('; ');
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Assertion code generation                                                  */
 /* -------------------------------------------------------------------------- */
@@ -257,7 +286,7 @@ export function generate(): GenerateResult {
   });
 
   if (recordingFiles.length === 0) {
-    console.log('ℹ  No recording JSON files found in /recordings');
+    console.log(`ℹ  No recording JSON files found in ${relative(ROOT, RECORDINGS_DIR)}`);
     return { filesWritten: [], brittleSelectors: [] };
   }
 
@@ -266,11 +295,42 @@ export function generate(): GenerateResult {
 
   const filesWritten: string[] = [];
   const brittleSelectors: BrittleReport[] = [];
+  const invalidRecordings: InvalidRecordingReport[] = [];
 
   for (const filePath of recordingFiles) {
     const raw = readFileSync(filePath, 'utf-8');
-    const json = JSON.parse(raw);
-    const recording = RecordingSchema.parse(json);
+    const relFilePath = relative(ROOT, filePath);
+    let json: unknown;
+
+    try {
+      json = JSON.parse(raw);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      invalidRecordings.push({
+        file: relFilePath,
+        reason: `invalid JSON (${msg})`,
+      });
+      continue;
+    }
+
+    const parsed = RecordingSchema.safeParse(json);
+    if (!parsed.success) {
+      if (isHarExport(json)) {
+        invalidRecordings.push({
+          file: relFilePath,
+          reason:
+            'HAR detected (Network export). Expected DevTools Recorder JSON with top-level "title" and "steps".',
+        });
+      } else {
+        invalidRecordings.push({
+          file: relFilePath,
+          reason: `schema mismatch (${summarizeParseIssues(parsed.error.issues)})`,
+        });
+      }
+      continue;
+    }
+
+    const recording = parsed.data;
     const recordingName = sanitizeFilename(recording.title);
 
     // Load sidecars
@@ -408,6 +468,19 @@ export function generate(): GenerateResult {
     console.log(`✓ ${relative(ROOT, outPath)}`);
   }
 
+  if (filesWritten.length === 0 && invalidRecordings.length > 0) {
+    const badCount = invalidRecordings.length;
+    const noun = badCount === 1 ? 'file' : 'files';
+    throw new Error(
+      [
+        `No valid DevTools Recorder JSON files found in ${relative(ROOT, RECORDINGS_DIR)}.`,
+        `Rejected ${badCount} ${noun}:`,
+        ...invalidRecordings.map((r) => `- ${r.file}: ${r.reason}`),
+        'Export from Chrome DevTools -> Recorder -> Export as JSON.',
+      ].join('\n'),
+    );
+  }
+
   // Report brittle selectors
   if (brittleSelectors.length > 0) {
     console.log('');
@@ -448,5 +521,11 @@ const isDirectRun =
     process.argv[1].endsWith('generate.js'));
 
 if (isDirectRun) {
-  generate();
+  try {
+    generate();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`✗ ${msg}`);
+    process.exit(1);
+  }
 }
